@@ -154,9 +154,22 @@ body::after {
   background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.014) 2px, rgba(0,0,0,.014) 4px);
 }
 
-/* ═══ WEBGL CANVAS ════════════════════════════════ */
-#gl-bg {
-  position: fixed; inset: 0; z-index: 0;
+/* ═══ HERO SPLINE BACKGROUND ══════════════════════ */
+.hero-spline-bg {
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+.hero-spline-bg spline-viewer {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+.hero-spline-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, rgba(4,5,8,.85), transparent 30%, transparent 70%, rgba(4,5,8,.85)),
+    linear-gradient(to bottom, transparent 45%, rgba(4,5,8,.95));
   pointer-events: none;
 }
 
@@ -958,12 +971,6 @@ footer {
   will-change: transform; transition: opacity .3s;
 }
 
-/* ═══ PARTICLES CANVAS ════════════════════════════════ */
-#star-canvas {
-  position: fixed; inset: 0; z-index: 0;
-  pointer-events: none; opacity: .7;
-}
-
 /* ═══ MOBILE ═════════════════════════════════════════ */
 @media (max-width: 960px) {
   nav { padding: 1rem 1.5rem !important; }
@@ -1001,10 +1008,6 @@ footer {
 
 <!-- SPOTLIGHT -->
 <div id="spotlight"></div>
-
-<!-- BACKGROUND CANVAS -->
-<canvas id="star-canvas"></canvas>
-<canvas id="gl-bg"></canvas>
 
 <!-- TOAST -->
 <div id="toast-zone"></div>
@@ -1487,147 +1490,6 @@ window.addEventListener('load', () => {
     document.getElementById('loader').classList.add('done');
   }, 3200);
 });
-
-/* ═══════════════════════════════════════════════════
-   STAR / PARTICLE BACKGROUND (canvas)
-═══════════════════════════════════════════════════ */
-(function initStars() {
-  const canvas = document.getElementById('star-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, stars = [], nebulae = [];
-
-  function resize() {
-    W = canvas.width = innerWidth;
-    H = canvas.height = innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  class Star {
-    constructor() { this.reset(); }
-    reset() {
-      this.x = Math.random() * W;
-      this.y = Math.random() * H;
-      this.size = Math.random() * 1.4 + .2;
-      this.speed = Math.random() * .12 + .02;
-      this.brightness = Math.random();
-      this.twinkleSpeed = Math.random() * .02 + .005;
-      this.twinklePhase = Math.random() * Math.PI * 2;
-      this.color = Math.random() > .9 ? `rgba(212,168,67,` : (Math.random() > .7 ? `rgba(180,200,255,` : `rgba(228,233,247,`);
-    }
-    update(t) {
-      this.twinklePhase += this.twinkleSpeed;
-      this.brightness = .4 + .6 * Math.abs(Math.sin(this.twinklePhase));
-      this.y += this.speed;
-      if (this.y > H) this.reset(), this.y = 0;
-    }
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = this.color + this.brightness + ')';
-      ctx.fill();
-      if (this.size > 1) {
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = this.color + .4 + ')';
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
-  }
-
-  class Nebula {
-    constructor() { this.reset(); }
-    reset() {
-      this.x = Math.random() * W;
-      this.y = Math.random() * H;
-      this.r = Math.random() * 200 + 80;
-      this.opacity = Math.random() * .04 + .01;
-      this.hue = Math.random() > .5 ? [212,168,67] : [31,60,100];
-      this.speed = (Math.random() - .5) * .05;
-      this.vx = (Math.random() - .5) * .08;
-    }
-    update() { this.x += this.vx; this.y += this.speed; if (this.y > H + this.r) this.reset(), this.y = -this.r; if (this.x < -this.r || this.x > W + this.r) this.reset(); }
-    draw() {
-      const grd = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
-      grd.addColorStop(0, `rgba(${this.hue[0]},${this.hue[1]},${this.hue[2]},${this.opacity})`);
-      grd.addColorStop(1, 'transparent');
-      ctx.fillStyle = grd;
-      ctx.fillRect(this.x - this.r, this.y - this.r, this.r * 2, this.r * 2);
-    }
-  }
-
-  for (let i = 0; i < 220; i++) stars.push(new Star());
-  for (let i = 0; i < 6; i++) nebulae.push(new Nebula());
-
-  let t = 0;
-  function loop() {
-    ctx.fillStyle = 'rgba(4,5,8,.18)';
-    ctx.fillRect(0, 0, W, H);
-    nebulae.forEach(n => { n.update(); n.draw(); });
-    stars.forEach(s => { s.update(t); s.draw(); });
-    t++;
-    requestAnimationFrame(loop);
-  }
-  loop();
-})();
-
-/* ═══════════════════════════════════════════════════
-   WEBGL SHADER BACKGROUND
-═══════════════════════════════════════════════════ */
-(function initGL() {
-  const canvas = document.getElementById('gl-bg');
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  if (!gl) return;
-  canvas.style.opacity = '.55';
-
-  const resize = () => {
-    canvas.width = innerWidth; canvas.height = innerHeight;
-    gl.viewport(0, 0, innerWidth, innerHeight);
-  };
-  resize(); window.addEventListener('resize', resize);
-
-  const vSrc = `attribute vec2 p; void main(){gl_Position=vec4(p,0.,1.);}`;
-  const fSrc = `
-    precision highp float;
-    uniform float t; uniform vec2 res; uniform vec2 mouse;
-    float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-    float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
-    float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p*=2.05;a*=.5;}return v;}
-    void main(){
-      vec2 uv=(gl_FragCoord.xy-.5*res)/min(res.x,res.y);
-      vec2 m=(mouse-.5*res)/min(res.x,res.y);
-      float d=length(uv-m*.5);
-      float n1=fbm(uv*1.5+t*.04+vec2(fbm(uv+t*.03),fbm(uv+vec2(0,1)+t*.025)));
-      float n2=fbm(uv*2.2-t*.025+vec2(1.7,9.2));
-      vec3 c1=vec3(.83,.66,.26)*smoothstep(.4,.8,n1)*.5;
-      vec3 c2=vec3(.12,.89,.76)*smoothstep(.5,.9,n2)*.25;
-      vec3 mg=vec3(.83,.66,.26)*smoothstep(.7,0.,d)*.2;
-      gl_FragColor=vec4(c1+c2+mg,1.);
-    }
-  `;
-  function mkShader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
-  const prog=gl.createProgram();
-  gl.attachShader(prog,mkShader(gl.VERTEX_SHADER,vSrc));
-  gl.attachShader(prog,mkShader(gl.FRAGMENT_SHADER,fSrc));
-  gl.linkProgram(prog); gl.useProgram(prog);
-  const buf=gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
-  const pLoc=gl.getAttribLocation(prog,'p');
-  gl.enableVertexAttribArray(pLoc); gl.vertexAttribPointer(pLoc,2,gl.FLOAT,false,0,0);
-  const uT=gl.getUniformLocation(prog,'t'),uR=gl.getUniformLocation(prog,'res'),uM=gl.getUniformLocation(prog,'mouse');
-  let mx=innerWidth/2,my=innerHeight/2;
-  document.addEventListener('mousemove',e=>{mx=e.clientX;my=innerHeight-e.clientY;});
-  let st=performance.now();
-  function render(now){
-    gl.uniform1f(uT,(now-st)*.001);
-    gl.uniform2f(uR,canvas.width,canvas.height);
-    gl.uniform2f(uM,mx,my);
-    gl.drawArrays(gl.TRIANGLES,0,3);
-    requestAnimationFrame(render);
-  }
-  requestAnimationFrame(render);
-})();
 
 /* ═══════════════════════════════════════════════════
    CURSOR
