@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cerafin C F — Portfolio</title>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 
@@ -168,9 +169,14 @@ body::after {
 .hero-spline-overlay {
   position: absolute; inset: 0;
   background:
-    linear-gradient(to right, rgba(4,5,8,.85), transparent 30%, transparent 70%, rgba(4,5,8,.85)),
-    linear-gradient(to bottom, transparent 45%, rgba(4,5,8,.95));
+    radial-gradient(ellipse 60% 70% at 25% 50%, rgba(4,5,8,.85) 0%, rgba(4,5,8,.55) 40%, transparent 75%),
+    linear-gradient(to right, rgba(4,5,8,.92) 0%, rgba(4,5,8,.55) 35%, rgba(4,5,8,.25) 65%, rgba(4,5,8,.9) 100%),
+    linear-gradient(to bottom, rgba(4,5,8,.6) 0%, transparent 30%, transparent 55%, rgba(4,5,8,.98) 100%);
   pointer-events: none;
+}
+.hero-spline-bg::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,0,0,.08) 3px, rgba(0,0,0,.08) 4px);
 }
 
 /* ═══ NAV ════════════════════════════════════════ */
@@ -307,7 +313,14 @@ section { position: relative; }
   position: relative; z-index: 1;
 }
 
-.hero-left { }
+.hero-left {
+  position: relative; z-index: 2;
+  text-shadow: 0 2px 24px rgba(0,0,0,.85), 0 1px 3px rgba(0,0,0,.75);
+}
+.hero-left .hero-name,
+.hero-left .hero-desc,
+.hero-left .hero-typing,
+.hero-left .hero-eyebrow { text-shadow: inherit; }
 .hero-eyebrow {
   display: flex; align-items: center; gap: 1rem;
   font-family: 'JetBrains Mono', monospace; font-size: .6rem;
@@ -1031,6 +1044,11 @@ footer {
 
 <!-- ═══════════════ HERO ═══════════════ -->
 <section id="hero">
+  <div class="hero-spline-bg" aria-hidden="true">
+    <spline-viewer url="https://prod.spline.design/us3ALejTXl6usHZ7/scene.splinecode" loading-anim-type="none"></spline-viewer>
+    <div class="hero-spline-overlay"></div>
+  </div>
+
   <div class="hero-bg-cross" aria-hidden="true">
     <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
       <line x1="200" y1="0" x2="200" y2="400" stroke="#d4a843" stroke-width="1"/>
