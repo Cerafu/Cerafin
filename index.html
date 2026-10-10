@@ -327,37 +327,44 @@ const VERSES = [
   for(let i=0;i<FN;i++)fd.push({a:Math.random()*6.28,r:1.4+Math.random()*2.4,y:(Math.random()-.5)*2.4,s:.5+Math.random()*1.4,v:(.1+Math.random()*.3)*(Math.random()<.5?-1:1)});
   frags.frustumCulled=false;root.add(frags);const dm=new T.Object3D();
 
-  // portal + world
-  const portal=G('portal');
-  const arch1=new T.Mesh(arch(3.2,1.6,.36,true),gold),arch2=new T.Mesh(arch(2.5,1.25,.14,true),bronze);arch1.position.set(0,-1.9,-.2);arch2.position.set(0,-1.75,-.5);portal.add(arch1,arch2);
-  [-1,1].forEach(s=>{const p=new T.Mesh(new T.LatheGeometry([[.0,0],[.22,0],[.16,.2],[.11,.3],[.11,2.7],[.18,2.85],[.2,3.1],[0,3.2]].map(p=>new T.Vector2(p[0],p[1])),low?10:18),champ);p.position.set(s*1.9,-1.9,0);portal.add(p)});
-  const world=G('world');root.remove(world);portal.add(world);world.position.set(0,-1.45,-.9);world.rotation.x=.55;world.scale.setScalar(.41);
-  const TS=low?28:44,tg=new T.PlaneGeometry(7,7,TS,TS);tg.rotateX(-Math.PI/2);
-  const tp=tg.attributes.position,tn=tp.count,hA=new Float32Array(tn),hB=new Float32Array(tn);
-  tg.setAttribute('color',new T.BufferAttribute(new Float32Array(tn*3),3));
-  for(let i=0;i<tn;i++){const x=tp.getX(i),z=tp.getZ(i),r=Math.hypot(x,z);
-    const o=Math.sin(x*1.1)*.5+Math.cos(z*.9+1)*.45+Math.sin((x+z)*.5)*.5-r*.12;hA[i]=o;hB[i]=Math.floor(o*2.2)/2.2*.8+(Math.abs(x)<.5?-.3:0)}
-  const terrain=new T.Mesh(tg,new T.MeshStandardMaterial({vertexColors:true,flatShading:true,metalness:.35,roughness:.6}));world.add(terrain);
-  const SP=low?10:16,spires=new T.InstancedMesh(spire(),gold,SP),sd=[];for(let i=0;i<SP;i++){const a=i*2.4;sd.push([Math.cos(a)*(.6+i*.17),Math.sin(a)*(.6+i*.17),.5+(i%4)*.25])}spires.frustumCulled=false;world.add(spires);
-  const PN=60,pathG=new T.BufferGeometry();pathG.setAttribute('position',new T.BufferAttribute(new Float32Array(PN*3),3));
-  const path=new T.Line(pathG,new T.LineBasicMaterial({color:0xffd990}));world.add(path);
-  const hAt=(x,z,m)=>{const gx=clamp((x+3.5)/7,0,1)*TS,gz=clamp((z+3.5)/7,0,1)*TS,i=Math.round(gz)*(TS+1)+Math.round(gx);return lerp(hA[i],hB[i],m)};
-  let lastM=-1;
-  function morph(m){if(Math.abs(m-lastM)<.004)return;lastM=m;const c=tg.attributes.color,col=new T.Color();
-    for(let i=0;i<tn;i++){const h=lerp(hA[i],hB[i],m);tp.setY(i,h);col.setHSL(lerp(.6,.11,clamp((h+1)/2.4,0,1)),.35,.14+clamp((h+1)/2.4,0,1)*.28);c.setXYZ(i,col.r,col.g,col.b)}
-    tp.needsUpdate=c.needsUpdate=true;tg.computeVertexNormals();
-    for(let i=0;i<SP;i++){const[x,z,s]=sd[i];dm.position.set(x,hAt(x,z,m),z);dm.rotation.set(0,0,0);dm.scale.set(.6*s,s*(1+m*.9),.6*s);dm.updateMatrix();spires.setMatrixAt(i,dm.matrix)}spires.instanceMatrix.needsUpdate=true;
-    const pa=pathG.attributes.position;for(let i=0;i<PN;i++){const u=i/(PN-1),z=3.2-u*6.4,x=Math.sin(u*9)*(1.4-m*1.1)*(1-u*.4);pa.setXYZ(i,x,hAt(x,z,m)+.06,z)}pa.needsUpdate=true}
+  // end crystal: nested rotating glass cubes around a molten core, hovering over an obsidian pedestal
+  const portal=G('portal'),world=new T.Group();portal.add(world);
+  const tw=new T.Group();tw.position.y=-1.9;tw.scale.setScalar(.7);portal.add(tw);
+  const cr=new T.Group();cr.position.y=2.3;tw.add(cr);
+  const glass=c=>new T.MeshStandardMaterial({color:c,metalness:.2,roughness:.1,transparent:true,opacity:.26,depthWrite:false,emissive:c,emissiveIntensity:.25,side:T.DoubleSide});
+  const gOut=glass(0x8a78d8),gMid=glass(0x6a5ac0),coreM=new T.MeshStandardMaterial({color:0x201408,emissive:0xffc86a,emissiveIntensity:2.2,roughness:.4});
+  const edgeO=new T.LineBasicMaterial({color:0xf0d9a0}),edgeM=new T.LineBasicMaterial({color:0xc9a24a}),edgeC=new T.LineBasicMaterial({color:0xffffff});
+  const cube=(sz,gm,em)=>{const g=new T.BoxGeometry(sz,sz,sz),o=new T.Group();o.add(new T.Mesh(g,gm),new T.LineSegments(new T.EdgesGeometry(g),em));return o};
+  const cOut=cube(1.6,gOut,edgeO),cMid=cube(1.05,gMid,edgeM),coreG=new T.BoxGeometry(.5,.5,.5),cCore=new T.Group();
+  cCore.add(new T.Mesh(coreG,coreM),new T.LineSegments(new T.EdgesGeometry(coreG),edgeC));
+  {const cs=new T.InstancedMesh(new T.OctahedronGeometry(.09,0),gold,8),dd=new T.Object3D();
+   for(let i=0;i<8;i++){dd.position.set(i&1?.8:-.8,i&2?.8:-.8,i&4?.8:-.8);dd.updateMatrix();cs.setMatrixAt(i,dd.matrix)}cOut.add(cs)}
+  cr.add(cOut,cMid,cCore);
+  const obs=new T.MeshStandardMaterial({color:0x0c0a16,metalness:.7,roughness:.28,envMapIntensity:1.2});
+  [[2.3,.35,.17],[1.6,.3,.5]].forEach(([w,h,y])=>{const g=new T.BoxGeometry(w,h,w),b=new T.Mesh(g,obs);b.position.y=y;tw.add(b);const e=new T.LineSegments(new T.EdgesGeometry(g),edgeM);e.position.y=y;tw.add(e)});
+  const halo2=new T.Mesh(new T.TorusGeometry(1.05,.02,8,64),teal);halo2.rotation.x=Math.PI/2;halo2.position.y=.7;tw.add(halo2);
+  const beam=new T.Mesh(new T.CylinderGeometry(.04,.04,8,8,1,true),new T.MeshBasicMaterial({color:0xb8a8ff,transparent:true,opacity:.22,blending:T.AdditiveBlending,depthWrite:false}));beam.position.y=4.5;tw.add(beam);
+  const cLight=new T.PointLight(0xffc86a,0,9),cv3=new T.Vector3();scene.add(cLight);
+  let lastM=-1,curM=0;const cWarm=new T.Color(0xffc86a),cCool=new T.Color(0x2fe0c4),gV=new T.Color(0x8a78d8),gT=new T.Color(0x3aa6c8);
+  function morph(m){curM=m;if(Math.abs(m-lastM)<.004)return;lastM=m;coreM.emissive.copy(cWarm).lerp(cCool,m);cLight.color.copy(coreM.emissive);
+    gOut.color.copy(gV).lerp(gT,m);gOut.emissive.copy(gOut.color);gMid.color.copy(gOut.color).multiplyScalar(.8);gMid.emissive.copy(gMid.color)}
+  function crystalAnim(t,vis){const k=1+curM*.6;cr.position.y=2.3+Math.sin(t*1.4)*.12;cOut.rotation.set(t*.35*k,t*.5*k,.2);cMid.rotation.set(-t*.7*k,t*.45*k,.25*t*.2);
+    cCore.rotation.set(t*1.1,t*.9,0);cCore.scale.setScalar(1+Math.sin(t*3)*.08);cr.getWorldPosition(cv3);cLight.position.copy(cv3);cLight.intensity=vis*(1.5+Math.sin(t*3)*.3)}
 
-  // ascending chronicle
-  const steps=G('steps'),stepList=[];
-  {const oct=r=>{const s=new T.Shape();for(let i=0;i<8;i++){const a=i/8*6.2832+.39;i?s.lineTo(Math.cos(a)*r,Math.sin(a)*r):s.moveTo(Math.cos(a)*r,Math.sin(a)*r)}s.closePath();return s};
-   const pts=[];
-   for(let i=0;i<5;i++){const g=new T.Group(),s=oct(.7+i*.05);hole(s,0,0,.34);const m=new T.Mesh(ext(s,.12),gold);m.rotation.x=-Math.PI/2;g.add(m);
-     const sp=new T.Mesh(spire(),i===4?champ:bronze);sp.scale.setScalar(.55+i*.18);sp.position.y=.06;g.add(sp);
-     const ring=new T.Mesh(new T.TorusGeometry(.5,.012,6,32),teal.clone());ring.rotation.x=Math.PI/2;ring.position.y=.2;g.add(ring);g.userData.ring=ring;
-     g.position.set(Math.cos(i*1.35)*1.7,i*.95-1.9,Math.sin(i*1.35)*1.7);pts.push(g.position.clone().add(new T.Vector3(0,.1,0)));steps.add(g);stepList.push(g)}
-   steps.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),80,.014,5,false),teal))}
+  // ascending chronicle: a spiral stair; the spire turns so each milestone comes to the front
+  const TURNS=2.5,SR=1.4,steps=G('steps'),stepList=[];
+  {const hp=(u,r)=>new T.Vector3(Math.cos(u*TURNS*6.2832)*r,-2.8+u*5.6,Math.sin(u*TURNS*6.2832)*r);
+   steps.add(new T.Mesh(new T.CylinderGeometry(.06,.1,6.4,12),bronze));
+   const TN=low?36:56,td=new T.InstancedMesh(new T.BoxGeometry(.62,.06,.4),bronze,TN),bs=new T.InstancedMesh(new T.CylinderGeometry(.012,.012,.4,5),champ,TN/2),o=new T.Object3D();
+   for(let i=0;i<TN;i++){const u=i/(TN-1);o.position.copy(hp(u,SR));o.rotation.set(0,-u*TURNS*6.2832,0);o.updateMatrix();td.setMatrixAt(i,o.matrix)}
+   for(let i=0;i<TN/2;i++){const u=i*2/(TN-1);o.position.copy(hp(u,SR+.31)).add(new T.Vector3(0,.22,0));o.rotation.set(0,0,0);o.updateMatrix();bs.setMatrixAt(i,o.matrix)}
+   steps.add(td,bs);
+   [[SR-.31,0,gold],[SR+.31,0,champ],[SR+.31,.42,teal]].forEach(([r,y,m])=>{const pts=[];for(let i=0;i<=120;i++)pts.push(hp(i/120,r).add(new T.Vector3(0,y+.04,0)));steps.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),low?120:240,.022,6,false),m))});
+   const star=(R,r)=>{const q=new T.Shape();for(let i=0;i<8;i++){const a=i/8*6.2832+1.5708,m=i%2?r:R;i?q.lineTo(Math.cos(a)*m,Math.sin(a)*m):q.moveTo(Math.cos(a)*m,Math.sin(a)*m)}q.closePath();return q};
+   for(let i=0;i<5;i++){const u=i/4,a=u*TURNS*6.2832,g=new T.Group(),sh=star(.36,.1);hole(sh,0,0,.07);
+     g.add(new T.Mesh(ext(sh,.05,.015),champ),new T.Mesh(new T.TorusGeometry(.24,.014,6,40),gold));
+     const orb=new T.Mesh(new T.IcosahedronGeometry(.075,1),teal.clone());orb.position.z=.03;g.add(orb);g.userData.glow=orb;
+     g.position.copy(hp(u,SR+.62)).add(new T.Vector3(0,.55,0));g.rotation.y=1.5708-a;steps.add(g);stepList.push(g)}}
 
   // folio
   const folio=G('folio');
@@ -411,9 +418,9 @@ const VERSES = [
     const cd=crossG.userData;cd.core.scale.setScalar(1+Math.sin(t*2)*.12+Math.hypot(mouse.x,mouse.y)*.25+pulse*.8+(ps>-1?.25:0)*cur[7]);cd.halo.rotation.set(t,t*.6,0);
     teal.emissiveIntensity=.8+.6*Math.sin(t*1.6)+I*.4;
     for(let i=0;i<FN;i++){const f=fd[i],a=f.a+t*f.v,r=f.r*(.55+cur[14]*.9)*(1+(1-I)*2.2)*(1+pulse*.5);dm.position.set(Math.cos(a)*r+mouse.x*f.s*.6,f.y*(.6+cur[14])+mouse.y*f.s*.5,Math.sin(a)*r);dm.rotation.set(t*f.s,t*f.s*.7,0);dm.scale.setScalar(f.s*(.4+.6*I));dm.updateMatrix();frags.setMatrixAt(i,dm.matrix)}frags.instanceMatrix.needsUpdate=true;
-    if(cur[9]>.01){morph(pp);warm.position.set(root.position.x,root.position.y-.3,-1);warm.intensity=cur[9]*(2.2+Math.sin(t*3)*.15)}else warm.intensity=0;
-    portal.rotation.y=Math.sin(t*.2)*.08;
-    if(cur[11]>.01){steps.rotation.y=-jp*Math.PI*1.6;steps.position.y=-jp*3.3+.2;stepList.forEach((g,i)=>{const on=i===ACT.ms;g.userData.ring.material.emissiveIntensity=on?2.4:.35;g.userData.ring.rotation.z=t*.8;g.scale.setScalar(lerp(g.scale.x,on?1.18:1,.1))})}
+    if(cur[9]>.01){morph(pp);warm.position.set(root.position.x,root.position.y,2.5);warm.intensity=cur[9]*(2.2+Math.sin(t*3)*.15)}else warm.intensity=0;
+    portal.rotation.y=mouse.x*.3+Math.sin(t*.2)*.1;portal.rotation.x=-mouse.y*.1;crystalAnim(t,cur[9]);
+    if(cur[11]>.01){steps.rotation.y=jp*TURNS*6.2832-1.5708;steps.position.y=2.8-jp*5.6;stepList.forEach((g,i)=>{const on=i===ACT.ms;g.userData.glow.material.emissiveIntensity=on?2.6:.5;g.scale.setScalar(lerp(g.scale.x,on?1.5:1,.12))})}
     if(cur[12]>.01){folio.children.forEach(g=>{if(!g.userData.side)return;const o=.5+Math.sin(t*.5)*.03;g.rotation.y=g.userData.side*(-o*.6+g.userData.k*.1*(.6+cur[12]*.4))});glow.emissiveIntensity=.5+Math.sin(t*.8)*.1}
     if(cur[13]>.01){const pa=sl.geometry.attributes.position,P=[];
       sm_.forEach((m,i)=>{const a=t*.25+i*2.094,r=2.5*cur[13]*(.9+.1*cur[14]);m.position.set(Math.cos(a)*r*1.5,Math.sin(a*1.3)*.7,Math.sin(a)*r*.6);m.rotation.set(t*.3,t*.4+i,0);P.push(m.position)});
