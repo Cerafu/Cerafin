@@ -9,12 +9,12 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cerafin C F — The Celestial Forge">
 <meta property="og:description" content="Student, creator, developer and explorer. Games, interfaces and creative experiments.">
-<meta property="og:image" content="https://YOUR-USERNAME.github.io/og-image.png">
+<meta property="og:image" content="https://cerafu.github.io/og-image.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cerafin C F — The Celestial Forge">
 <meta name="twitter:description" content="Student, creator, developer and explorer. Games, interfaces and creative experiments.">
-<meta name="twitter:image" content="https://YOUR-USERNAME.github.io/og-image.png">
+<meta name="twitter:image" content="https://cerafu.github.io/og-image.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🕷️%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -505,9 +505,9 @@ const VERSES = [
 
   const crossG=G('cross');
   {const s=new T.Shape(),a=.12,L=.62,Sx=.34;s.moveTo(-a,-L);s.lineTo(a,-L);s.lineTo(a,-Sx*.6);s.lineTo(Sx,-Sx*.6);s.lineTo(Sx,-Sx*.6+a*2);s.lineTo(a,-Sx*.6+a*2);s.lineTo(a,L);s.lineTo(-a,L);s.lineTo(-a,-Sx*.6+a*2);s.lineTo(-Sx,-Sx*.6+a*2);s.lineTo(-Sx,-Sx*.6);s.lineTo(-a,-Sx*.6);s.closePath();
-   hole(s,0,.3,.04);const cm=new T.Mesh(ext(s,.12,.03),champ);cm.position.z=-.06;crossG.add(cm);
-   const core=new T.Mesh(new T.IcosahedronGeometry(.17,2),teal);core.position.set(0,-.12,.02);crossG.add(core);crossG.userData.core=core;
-   const halo=new T.Mesh(new T.TorusGeometry(.3,.012,6,48),teal);halo.position.set(0,-.12,0);crossG.add(halo);crossG.userData.halo=halo}
+   hole(s,0,.3,.04);const cm=new T.Mesh(ext(s,.12,.03),champ);cm.position.z=-.06;cm.rotation.z=Math.PI;crossG.add(cm);
+   const core=new T.Mesh(new T.IcosahedronGeometry(.17,2),teal);core.position.set(0,.13,.02);crossG.add(core);crossG.userData.core=core;
+   const halo=new T.Mesh(new T.TorusGeometry(.3,.012,6,48),teal);halo.position.set(0,.13,0);crossG.add(halo);crossG.userData.halo=halo}
 
   // fragments
   const FN=low?32:70,frags=new T.InstancedMesh(new T.OctahedronGeometry(.07,0),champ,FN),fd=[];
