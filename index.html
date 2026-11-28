@@ -9,12 +9,12 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Cerafin C F — The Celestial Forge">
 <meta property="og:description" content="Student, creator, developer and explorer. Games, interfaces and creative experiments.">
-<meta property="og:image" content="https://cerafu.github.io/Cerafin/og-image.png">
+<meta property="og:image" content="https://YOUR-USERNAME.github.io/og-image.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cerafin C F — The Celestial Forge">
 <meta name="twitter:description" content="Student, creator, developer and explorer. Games, interfaces and creative experiments.">
-<meta name="twitter:image" content="https://cerafu.github.io/Cerafin/og-image.png">
+<meta name="twitter:image" content="https://YOUR-USERNAME.github.io/og-image.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🕷️%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -144,8 +144,8 @@ footer p a{color:var(--teal)}
 .live-badge{display:none;align-items:center;gap:.45rem;background:#e0202b;color:#fff;font:600 .78rem var(--sans);letter-spacing:.12em;padding:.2rem .65rem;text-decoration:none}
 .live-badge:before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;animation:lv 1.2s infinite}@keyframes lv{50%{opacity:.25}}
 body.islive .live-badge{display:inline-flex}
-body.islive .lk[href*="twitch"] span:after{content:' · LIVE NOW';color:#ff6b72;font-weight:600}
-body.islive .live .lab:after{content:' · NOW LIVE';color:#ff6b72}
+body.islive .lk[href*="twitch"] span:after{content:' · LIVE NOW' var(--vc,'');color:#ff6b72;font-weight:600}
+body.islive .live .lab:after{content:' · NOW LIVE' var(--vc,'');color:#ff6b72}
 #twp{position:absolute;inset:0}
 #toast{position:fixed;left:50%;bottom:1.6rem;transform:translate(-50%,20px);background:var(--gold);color:#fff;padding:.6rem 1.2rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:120}#toast.on{opacity:1;transform:translate(-50%,0)}
 #wmap{position:fixed;inset:0;z-index:90;background:rgba(11,3,5,.95);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
@@ -372,13 +372,17 @@ const VERSES = [
   // cards talk to the 3D world: hovering/focusing a project steers the crystal, skill/milestone hover lights the matching part
   window.HOVER={proj:-1};
   // Twitch embed: the official player script reports ONLINE/OFFLINE, which drives the LIVE badge (no backend, no API key).
-  const setLive=on=>{document.body.classList.toggle('islive',on);document.title=(on?'🔴 LIVE · ':'')+'Cerafin C F — The Celestial Forge'};
+  let polled=false;
+  const setLive=(on,n)=>{document.body.classList.toggle('islive',on);document.title=(on?'🔴 LIVE · ':'')+'Cerafin C F — The Celestial Forge';
+    const b=document.querySelector('.live-badge');if(b)b.textContent=on&&n?'LIVE · '+n+' watching':'LIVE';document.body.style.setProperty('--vc',on&&n?JSON.stringify(' · '+n+' watching'):'""')};
+  // Live viewer count: polled once a minute (only while the tab is visible) from DecAPI, a free public Twitch proxy. Failures are silent.
+  if(/^https?:$/.test(location.protocol)){const poll=()=>{if(document.hidden)return;fetch('https://decapi.me/twitch/viewercount/cer_pro_').then(r=>r.text()).then(t=>{t=t.trim();if(/^\d+$/.test(t)){polled=true;setLive(true,+t)}else if(/offline/i.test(t)){polled=true;setLive(false)}}).catch(()=>{})};poll();setInterval(poll,60000);document.addEventListener('visibilitychange',poll)}
   const tw=document.getElementById('twp');
   if(tw&&/^https?:$/.test(location.protocol)&&location.hostname){const host=location.hostname;
     const plain=()=>{if(tw.querySelector('iframe'))return;const f=document.createElement('iframe');f.title='Twitch live player for cer_pro_';f.allowFullscreen=true;f.loading='lazy';f.src='https://player.twitch.tv/?channel=cer_pro_&parent='+encodeURIComponent(host)+'&muted=true&autoplay=false';tw.appendChild(f)};
     const sc=document.createElement('script');sc.src='https://player.twitch.tv/js/embed/v1.js';sc.async=true;
     sc.onload=()=>{try{const pl=new Twitch.Player('twp',{channel:'cer_pro_',parent:[host],muted:true,autoplay:false,width:'100%',height:'100%'});
-      pl.addEventListener(Twitch.Player.ONLINE,()=>setLive(true));pl.addEventListener(Twitch.Player.OFFLINE,()=>setLive(false))}catch(e){plain()}};
+      pl.addEventListener(Twitch.Player.ONLINE,()=>{if(!polled)setLive(true)});pl.addEventListener(Twitch.Player.OFFLINE,()=>{if(!polled)setLive(false)})}catch(e){plain()}};
     sc.onerror=plain;document.head.appendChild(sc)}
   document.querySelectorAll('#projects .card').forEach((c,i)=>{const on=()=>{HOVER.proj=i},off=()=>{HOVER.proj=-1};c.addEventListener('pointerenter',on);c.addEventListener('pointerleave',off);c.addEventListener('focusin',on);c.addEventListener('focusout',off)});
   sk.forEach((c,i)=>c.addEventListener('pointerenter',()=>{ACT.skill=i;sk.forEach((x,k)=>x.classList.toggle('act',k===i))}));
